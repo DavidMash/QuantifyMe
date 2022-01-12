@@ -30,7 +30,7 @@ public class Key {
 			major.put(5, 9);
 			major.put(6, 11);
 		}
-		return major.get(note);
+		return major.get(note % 7);
 	}
 	
 	public static int naturalMinor(int note) {
@@ -49,7 +49,7 @@ public class Key {
 			naturalMinor.put(5, 8);
 			naturalMinor.put(6, 10);
 		}
-		return naturalMinor.get(note);
+		return naturalMinor.get(note % 7);
 	}
 	
 	public static int harmonicMinor(int note) {
@@ -68,13 +68,18 @@ public class Key {
 			harmonicMinor.put(5, 8);
 			harmonicMinor.put(6, 11);
 		}
-		return harmonicMinor.get(note);
+		return harmonicMinor.get(note % 7);
 	}
 	
 	public Random random;
 	private MODE mode;
 	private int tonicValue;
-	private Map<Integer,Integer> modeMap;
+	
+	public Key(int tonicValue, MODE mode, Random random) {
+		this.tonicValue = tonicValue;
+		this.mode = mode;
+		this.random = random;
+	}
 	
 	public Key(Random random) {
 		this.random = random;
@@ -84,14 +89,14 @@ public class Key {
 	
 	public void randomizeMode() {
 		this.mode = MODE.values()[random.nextInt(MODE.values().length)];
-		modeMap = null;
 	}
 	
 	public void randomizeKey() {
-		this.key = random.nextInt(tonics.length);
+		this.tonicValue = random.nextInt(tonics.length);
 	}
 	
 	public int transposeToKey(int note) {
+		int octave = note / 7;
 		if(this.mode == MODE.MAJOR) {
 			note = major(note);
 		}else if (this.mode == MODE.NATURAL_MINOR) {
@@ -99,6 +104,7 @@ public class Key {
 		}else if (this.mode == MODE.HARMONIC_MINOR) {
 			note = harmonicMinor(note);
 		}
+		note += (octave * 12);
 		note += tonicValue;
 		return note;
 	}

@@ -2,21 +2,31 @@ import java.util.Map;
 import java.util.Random;
 
 public class Pattern {
+	private static final int BEAT_DICE_SIDES = 20;
+	private static final int ODD_BEAT_THRESHOLD = 19;
+	private static final int DOWNBEAT_DICE_SIDES = 4;
+	private static final int DOWNBEAT_THRESHOLD = 1;
+	private static final int OFFBEAT_DICE_SIDES = 4;
+	private static final int OFFBEAT_THRESHOLD = 3;
+	private static final int SUBDIVISION_DICE_SIDES = 10;
+	private static final int TRIPLET_THRESHOLD = 9;
+	private static final int COMMON_TIME = 4;
+	
 	private StringBuilder pattern;
 	private Random random;
 	
-	public Pattern(String givenString) {
+	public Pattern(String givenString, Random random) {
 		this.pattern = new StringBuilder();
 		this.add(givenString);
-		random = new Random();
+		this.random = random;
 	}
 	
-	public Pattern() {
-		this("");
+	public Pattern(Random random) {
+		this("", random);
 	}
 	
-	public Pattern(Pattern givenPattern) {
-		this(givenPattern.toString());
+	public Pattern(Pattern givenPattern, Random random) {
+		this(givenPattern.toString(), random);
 	}
 	
 	public void reset() {
@@ -37,6 +47,14 @@ public class Pattern {
 		this.add("~");
 	}
 	
+	public void openBracket() {
+		this.add("[");
+	}
+	
+	public void closeBracket() {
+		this.add("]");
+	}
+	
 	public void addRandomNotes(int numberCount, int lowerRange, int upperRange) {
 		for (int i =  0; i < numberCount; i++) {
 			this.add(random.nextInt(upperRange - lowerRange) + lowerRange);
@@ -49,62 +67,33 @@ public class Pattern {
 		}
 	}
 	
-	public void repeatOverChords(Pattern chords) {
-		String[] roots = chords.toString().split(" ");
-		String[] oldPattern = this.pattern.toString().split(" ");
-		this.reset();
-		for(String root : roots) {
-			int rootAsNum = Integer.parseInt(root);
-			boolean ignoreNext = false;
-			for(String note : oldPattern) {
-				if(ignoreNext) {
-					ignoreNext = false;
-					this.add(note);
-					continue;
-				}
-				try {
-					int noteAsNum = Integer.parseInt(note);
-					this.add(rootAsNum+noteAsNum);
-				}catch (NumberFormatException e) {
-					this.add(note);
-					if(note.equals("/") || note.equals("*")) {
-						ignoreNext = true;
-					}
-				}
-			}
-		}
-		this.cutTimeBy(roots.length);
-	}
-	
 	public void cutTimeBy(int divisor) {
 		this.pattern.insert(0, "[ ");
 		this.pattern.append(" ] / "+divisor);
 	}
 	
-	public Pattern inKey() {
-		Pattern result = new Pattern();
-		Map<Integer, Integer> scale = Scale.major();
-		String[] patternArray = this.pattern.toString().split(" ");
-		boolean ignoreNext = false;
-		for(String note : patternArray) {
-			if(ignoreNext) {
-				ignoreNext = false;
-				result.add(note);
-				continue;
-			}
-			try {
-				int noteAsNum = Integer.parseInt(note);
-				int scaleDegree = noteAsNum % 7;
-				int octave = (noteAsNum / 7) * 12;
-				result.add(scale.get(scaleDegree)+octave);
-			}catch (NumberFormatException e) {
-				result.add(note);
-				if(note.equals("/") || note.equals("*")) {
-					ignoreNext = true;
+	public void generateRhythm() {
+		this.reset();
+		int roll = random.nextInt(SUBDIVISION_DICE_SIDES);
+		boolean triplet = (roll >= TRIPLET_THRESHOLD);
+		roll = random.nextInt(BEAT_DICE_SIDES);
+		int beats = (roll >= ODD_BEAT_THRESHOLD)? COMMON_TIME + (random.nextInt(6) - 3): COMMON_TIME;
+		for(int i = 0; i < beats; i++) {
+			this.openBracket(); //start of beat
+			int dice = DOWNBEAT_DICE_SIDES;
+			int threshold = DOWNBEAT_THRESHOLD;
+			int subdivisions = ((triplet)? 3 : 2) * (random.nextInt(2) + 1);
+			for(int j = 0; j < subdivisions; j++) {
+				if (j > 0) {
+					dice = OFFBEAT_DICE_SIDES;
+					threshold = OFFBEAT_THRESHOLD;
 				}
+				roll = random.nextInt(dice);
+				if(roll >= threshold) this.add("1");
+				else this.add("0");
 			}
+			this.closeBracket();
 		}
-		return result;
 	}
 	
 	public String toString() {

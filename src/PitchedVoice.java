@@ -2,8 +2,8 @@ import java.util.Random;
 
 abstract class PitchedVoice extends Voice{
 	
-	public PitchedVoice(Key key, Pattern chords, Double density, boolean isLead, Random random) {
-		super(key, chords, density, isLead, random);
+	public PitchedVoice(Key key, Pattern chords, Pattern rhythm, Double density, boolean isLead, Random random) {
+		super(key, chords, rhythm, density, isLead, random);
 	}
 	
 	public void repeatOverChords() {
@@ -11,7 +11,7 @@ abstract class PitchedVoice extends Voice{
 	}
 
 	@Override
-	void setPatternOverChords() {
+	protected void setPatternOverChords() {
 		String[] roots = this.chords.toString().split(" ");
 		String[] oldPattern = this.pattern.toString().split(" ");
 		for(String root : roots) {
@@ -39,7 +39,8 @@ abstract class PitchedVoice extends Voice{
 
 	@Override
 	public Pattern getPatternInKey() {
-		Pattern result = new Pattern();
+		Pattern result = new Pattern(this.random);
+		this.setPatternOverChords();
 		String[] patternArray = this.patternOverChords.toString().split(" ");
 		boolean ignoreNext = false;
 		for(String note : patternArray) {
