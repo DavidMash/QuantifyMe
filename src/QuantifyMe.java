@@ -13,6 +13,7 @@ public class QuantifyMe {
 	static final double LEADER_THRESHOLD = 0.9;
 	static final int MAX_VOICES = 10;
 	static final Random random = new Random(); 
+	
 	public static void main(String[] args) throws IOException {
 	    System.out.println("Setting up output file...");
 	    
@@ -37,19 +38,18 @@ public class QuantifyMe {
 	    System.out.println("Generating patterns...");
 	    
 	    for(int i = 0; i < numberOfVoices; i++) {
-	    	Double density = densities[i];
+	    	double density = densities[i];
 	    	//if(density < SILENT_THRESHOLD) continue;
-	    	boolean leader = density >= LEADER_THRESHOLD;
 	    	
+	    	boolean isLead = density >= LEADER_THRESHOLD;
 	    	int voiceSelection = random.nextInt(TOTAL_VOICE_OPTIONS);
-	    	Pattern pattern = null;
 	    	if(voiceSelection == CHORD) {
-		    	pattern = arpeggio(chords, density, leader);
-		    	voices[i] = "Chords";
+		    	voices[i] = new Chord(chords, density, isLead);
 	    	}else if(voiceSelection == ARPEGGIO) {
-	    		pattern = chord(chords, density, leader);
-		    	voices[i] = "Arpeggio";
+		    	voices[i] = new Arpeggio(chords, density, isLead);
 	    	}
+	    	
+	    	Pattern pattern = Voice.getPatternInKey(,);
 
 		    writer.append(pattern.inKey().toString());
 		    writer.append("%");
@@ -70,6 +70,7 @@ public class QuantifyMe {
 	
 	//make the voices into classes
 	public static Pattern arpeggio(Pattern chords, Double density, boolean leader) throws IOException {
+		Voice
 		Pattern pattern = new Pattern("0 2 4 6");
 	    pattern.repeatOverChords(chords);
 	    return pattern;

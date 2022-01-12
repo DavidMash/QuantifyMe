@@ -1,81 +1,46 @@
-import java.util.Map;
 import java.util.Random;
 
-public class PitchedVoice implements Voice{
-	private StringBuilder pattern;
-	private Random random;
+abstract class PitchedVoice extends Voice{
 	
-	public PitchedVoice() {
-		this.pattern = new StringBuilder();
-		random = new Random();
+	public PitchedVoice(Key key, Pattern chords, Double density, boolean isLead, Random random) {
+		super(key, chords, density, isLead, random);
 	}
 	
-	public void reset() {
-		pattern = new StringBuilder();
+	public void repeatOverChords() {
+		
 	}
-	
-	public void add(String newVal) {
-		if(newVal.isEmpty()) return;
-		if(!pattern.isEmpty()) pattern.append(" ");
-		pattern.append(newVal);
-	}
-	
-	public void add(int integer) {
-		this.add(""+integer);
-	}
-	
-	public void addRest() {
-		this.add("~");
-	}
-	
-	public void addRandomNotes(int numberCount, int lowerRange, int upperRange) {
-		for (int i =  0; i < numberCount; i++) {
-			this.add(random.nextInt(upperRange - lowerRange) + lowerRange);
-		}
-	}
-	
-	public void addRandomBinary(int numberCount) {
-		for (int i =  0; i < numberCount; i++) {
-			this.add(random.nextInt(2));
-		}
-	}
-	
-	public void repeatOverChords(PitchedVoice chords) {
-		String[] roots = chords.toString().split(" ");
+
+	@Override
+	void setPatternOverChords() {
+		String[] roots = this.chords.toString().split(" ");
 		String[] oldPattern = this.pattern.toString().split(" ");
-		this.reset();
 		for(String root : roots) {
 			int rootAsNum = Integer.parseInt(root);
 			boolean ignoreNext = false;
 			for(String note : oldPattern) {
 				if(ignoreNext) {
 					ignoreNext = false;
-					this.add(note);
+					this.patternOverChords.add(note);
 					continue;
 				}
 				try {
 					int noteAsNum = Integer.parseInt(note);
-					this.add(rootAsNum+noteAsNum);
+					this.patternOverChords.add(rootAsNum+noteAsNum);
 				}catch (NumberFormatException e) {
-					this.add(note);
+					this.patternOverChords.add(note);
 					if(note.equals("/") || note.equals("*")) {
 						ignoreNext = true;
 					}
 				}
 			}
 		}
-		this.cutTimeBy(roots.length);
+		this.patternOverChords.cutTimeBy(roots.length);
 	}
-	
-	public void cutTimeBy(int divisor) {
-		this.pattern.insert(0, "[ ");
-		this.pattern.append(" ] / "+divisor);
-	}
-	
-	public PitchedVoice inKey() {
-		PitchedVoice result = new PitchedVoice();
-		Map<Integer, Integer> scale = Scale.major();
-		String[] patternArray = this.pattern.toString().split(" ");
+
+	@Override
+	public Pattern getPatternInKey() {
+		Pattern result = new Pattern();
+		String[] patternArray = this.patternOverChords.toString().split(" ");
 		boolean ignoreNext = false;
 		for(String note : patternArray) {
 			if(ignoreNext) {
@@ -85,9 +50,7 @@ public class PitchedVoice implements Voice{
 			}
 			try {
 				int noteAsNum = Integer.parseInt(note);
-				int scaleDegree = noteAsNum % 7;
-				int octave = (noteAsNum / 7) * 12;
-				result.add(scale.get(scaleDegree)+octave);
+				result.add(this.key.transposeToKey(noteAsNum));
 			}catch (NumberFormatException e) {
 				result.add(note);
 				if(note.equals("/") || note.equals("*")) {
@@ -96,21 +59,5 @@ public class PitchedVoice implements Voice{
 			}
 		}
 		return result;
-	}
-	
-	public String toString() {
-		return pattern.toString();
-	}
-
-	@Override
-	public void generatePattern(Random random) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Pattern getPatternInKey(int key, int mode) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }
