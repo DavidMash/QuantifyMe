@@ -2,46 +2,17 @@ import java.util.Random;
 
 abstract class PitchedVoice extends Voice{
 	
+	protected Pattern patternOverChords;
+	
 	public PitchedVoice(Key key, Pattern chords, Pattern rhythm, Double density, boolean isLead, Random random) {
 		super(key, chords, rhythm, density, isLead, random);
-	}
-	
-	public void repeatOverChords() {
-		
-	}
-
-	@Override
-	protected void setPatternOverChords() {
-		String[] roots = this.chords.toString().split(" ");
-		String[] oldPattern = this.pattern.toString().split(" ");
-		for(String root : roots) {
-			int rootAsNum = Integer.parseInt(root);
-			boolean ignoreNext = false;
-			for(String note : oldPattern) {
-				if(ignoreNext) {
-					ignoreNext = false;
-					this.patternOverChords.add(note);
-					continue;
-				}
-				try {
-					int noteAsNum = Integer.parseInt(note);
-					this.patternOverChords.add(rootAsNum+noteAsNum);
-				}catch (NumberFormatException e) {
-					this.patternOverChords.add(note);
-					if(note.equals("/") || note.equals("*")) {
-						ignoreNext = true;
-					}
-				}
-			}
-		}
-		this.patternOverChords.cutTimeBy(roots.length);
+		patternOverChords = new Pattern(this.random);
 	}
 
 	@Override
 	public Pattern getPatternInKey() {
 		Pattern result = new Pattern(this.random);
-		this.setPatternOverChords();
-		String[] patternArray = this.patternOverChords.toString().split(" ");
+		String[] patternArray = this.pattern.getPatternArray();
 		boolean ignoreNext = false;
 		for(String note : patternArray) {
 			if(ignoreNext) {

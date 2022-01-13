@@ -1,7 +1,9 @@
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -16,16 +18,28 @@ public class QuantifyMe {
 	static final int SUB_BASS = 6;
 	
 	
-	static final int TOTAL_VOICE_OPTIONS = 7;
+	static final int TOTAL_VOICE_OPTIONS = 5;
 	static final double SILENT_THRESHOLD = 0.3;
 	static final double LEADER_THRESHOLD = 0.9;
 	static final int MAX_VOICES = 7;
 	static final Random random = new Random(); 
+
+	private static boolean debug = false;
+	private static boolean choose = false;
 	
 	public static void main(String[] args) throws IOException {
-		boolean debug = false;
-		if(args.length > 0 && args[0].equals("debug")) debug = true;
-		if(debug) System.out.println("Starting in debug mode...");
+		if(args.length > 0 && args[0].equals("debug")) { 
+			debug = true;
+			System.out.println("Starting in debug mode...");
+		}
+		
+		if(args.length > 1 && args[1].equals("choose")) {
+			choose = true;
+			System.out.println("with choosing on...");
+		}
+		
+		BufferedReader keyboard = new BufferedReader (new InputStreamReader(System.in));
+		
 	    System.out.println("Setting up output file...");
 	    
 		File file = new File("generatedPattern.txt");
@@ -33,8 +47,28 @@ public class QuantifyMe {
 	    
 	    System.out.println("Generating chords, rhythms, and voices...");
 	    
-	    Pattern chords = new Pattern("0 5 1 4", random); //we need random chord progressions
+	    Key key = new Key(random);
+	    key.setMode(Key.MODE.MAJOR);
+	    
+	    Pattern chords = generateChords();
+	    
 	    int numberOfVoices = random.nextInt(MAX_VOICES);
+	    
+	    if(choose) {
+    		boolean done = false;
+    		while(!done) {
+	    		System.out.print("Enter desired number of voices: ");
+    			try {
+		    		numberOfVoices = Integer.parseInt(keyboard.readLine());
+		    		if(numberOfVoices > 0) {
+		    			done = true;
+		    		}
+	    		} catch (NumberFormatException e) {
+	    			System.out.println("Try again.");
+	    		}
+    		}
+    	}
+	    
 	    Voice[] voices = new Voice[numberOfVoices];
 	    
 	    int numberOfRhythms = random.nextInt(MAX_VOICES) + 1;
@@ -46,16 +80,14 @@ public class QuantifyMe {
 	    	rhythms.add(rhythm);
 	    }
 	    
-	    //Key key = new Key(random);
-	    Key key = new Key(0, Key.MODE.MAJOR, random);
-	    
 	    Double[] densities = new Double[numberOfVoices];
 	    for(int i = 0; i < numberOfVoices; i++) {
 	    	int voiceIndex = random.nextInt(numberOfVoices);
 	    	while(densities[voiceIndex] != null) {
 	    		voiceIndex = (voiceIndex + 1) % numberOfVoices;
 	    	}
-	    	densities[voiceIndex] = (Double) (i / (double) numberOfVoices);
+	    	densities[voiceIndex] = (Double) (i / ((double) numberOfVoices));
+	    	//densities[voiceIndex] = densities[voiceIndex] + ((1 - densities[voiceIndex]) / 2); // skew up
 	    }
 	    
 	    System.out.println("Generating patterns...");
@@ -63,27 +95,45 @@ public class QuantifyMe {
 	    for(int i = 0; i < numberOfVoices; i++) {
 	    	double density = densities[i];
 	    	
-	    	//if(density < SILENT_THRESHOLD) continue;
 	    	boolean isLead = density >= LEADER_THRESHOLD;
 	    	
 	    	int voiceSelection = random.nextInt(TOTAL_VOICE_OPTIONS);
+	    	
+	    	if(choose) {
+	    		boolean done = false;
+	    		while(!done) {
+	    		System.out.print("Choose voice (0 - " + (TOTAL_VOICE_OPTIONS - 1) + "): ");
+	    			try {
+			    		voiceSelection = Integer.parseInt(keyboard.readLine());
+			    		if (voiceSelection >= 0 && voiceSelection < TOTAL_VOICE_OPTIONS) {
+			    			done = true;
+			    		}
+		    		} catch (NumberFormatException e) {
+		    			System.out.println("Try again.");
+		    		}
+	    		}
+	    	}
+	    	
+	    	System.out.println("Creating voice...");
+	    	
 	    	if(voiceSelection == KICK) {
-		    	voices[i] = new Chord(key, chords, chords, density, isLead, random);
+		    	voices[i] = new Kick(key, chords, rhythms.get(0), density, isLead, random);
 	    	} else if(voiceSelection == SNARE) {
-		    	voices[i] = new Arpeggio(key, chords, chords, density, isLead, random);
+		    	voices[i] = new Snare(key, chords, rhythms.get(0), density, isLead, random);
 	    	} else if(voiceSelection == HIHAT) {
-		    	voices[i] = new Arpeggio(key, chords, chords, density, isLead, random);
+		    	voices[i] = new Hihat(key, chords, rhythms.get(0), density, isLead, random);
 	    	} else if(voiceSelection == CHORD) {
-		    	voices[i] = new Chord(key, chords, chords, density, isLead, random);
+		    	voices[i] = new Chord(key, chords, rhythms.get(0), density, isLead, random);
 	    	} else if(voiceSelection == ARPEGGIO) {
-		    	voices[i] = new Arpeggio(key, chords, chords, density, isLead, random);
+		    	voices[i] = new Arpeggio(key, chords, rhythms.get(0), density, isLead, random);
 	    	} else if(voiceSelection == BASS) {
-		    	voices[i] = new Arpeggio(key, chords, chords, density, isLead, random);
+		    	voices[i] = new Arpeggio(key, chords, rhythms.get(0), density, isLead, random);
 	    	} else {
-	    		voices[i] = new Chord(key, chords, chords, density, isLead, random);
+	    		voices[i] = new Chord(key, chords, rhythms.get(0), density, isLead, random);
 	    	}
 	    	
 	    	voices[i].generatePattern();
+	    	voices[i].setPatternOverChords();
 	    	Pattern pattern = voices[i].getPatternInKey();
 
 		    writer.append(pattern.toString());
@@ -93,13 +143,29 @@ public class QuantifyMe {
 	    System.out.println("Adding note of voice order in file...");
 	    
 	    writer.append("\nVoices in order:");
-	    for(int i = 0; i < numberOfVoices; i++) {
+	    for (int i = 0; i < numberOfVoices; i++) {
 	    	writer.append("\n"+i+") "+voices[i]);
+	    	if (debug) {
+	    		writer.append(" (with density: " + voices[i].getDensity() + ")");
+	    	}
 	    }
 	    writer.append("\nin the key of "+key+".");
 	    
 	    System.out.println("Saving to File: "+file.getAbsolutePath());
 	    writer.close();
 	    System.out.println("Done!");
+	}
+	
+	private static Pattern generateChords(){
+		String[] roots = {"0"};
+		String[] predominants = {"1", "2", "3", "5"};
+		String[] dominants = {"4", "6"};
+		
+		Pattern prog = new Pattern(random);
+		prog.add(roots[random.nextInt(roots.length)]);
+		prog.add(predominants[random.nextInt(predominants.length)]);
+		prog.add(predominants[random.nextInt(predominants.length)]);
+		prog.add(dominants[random.nextInt(dominants.length)]);		
+		return prog;
 	}
 }

@@ -95,6 +95,10 @@ public class Key {
 		this.tonicValue = random.nextInt(tonics.length);
 	}
 	
+	public void setMode(MODE mode) {
+		this.mode = mode;
+	}
+	
 	public int transposeToKey(int note) {
 		int octave = note / 7;
 		if(this.mode == MODE.MAJOR) {

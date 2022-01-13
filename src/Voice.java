@@ -8,7 +8,6 @@ public abstract class Voice {
 	protected double density;
 	protected boolean isLead;
 	protected Pattern pattern;
-	protected Pattern patternOverChords;
 	protected Random random;
 	
 	public Voice(Key key, Pattern chords, Pattern rhythm, Double density, boolean isLead, Random random) {
@@ -19,7 +18,6 @@ public abstract class Voice {
 		this.isLead = isLead;
 		this.random = new Random();
 		this.pattern = new Pattern(this.random);
-		this.patternOverChords = new Pattern(this.random);
 	}
 	
 	public void reset() {
@@ -28,9 +26,13 @@ public abstract class Voice {
 	
 	abstract public void generatePattern();
 
-	abstract protected void setPatternOverChords();
+	abstract public void setPatternOverChords();
 	
 	abstract public Pattern getPatternInKey();
+	
+	public double getDensity() {
+		return this.density;
+	}
 	
 	abstract public String toString();
 }
