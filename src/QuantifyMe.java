@@ -22,6 +22,7 @@ public class QuantifyMe {
 	static final double SILENT_THRESHOLD = 0.3;
 	static final double LEADER_THRESHOLD = 0.9;
 	static final int MAX_VOICES = 7;
+	static final int MAX_SECTIONS = 5;
 	static final Random random = new Random(); 
 
 	private static boolean debug = false;
@@ -53,6 +54,7 @@ public class QuantifyMe {
 	    Pattern chords = generateChords();
 	    
 	    int numberOfVoices = random.nextInt(MAX_VOICES);
+	    int numberOfSections = random.nextInt(MAX_VOICES);
 	    
 	    if(choose) {
     		boolean done = false;
@@ -67,11 +69,23 @@ public class QuantifyMe {
 	    			System.out.println("Try again.");
 	    		}
     		}
+    		done = false;
+    		while(!done) {
+	    		System.out.print("Enter desired number of sections: ");
+    			try {
+		    		numberOfSections = Integer.parseInt(keyboard.readLine());
+		    		if(numberOfSections > 0) {
+		    			done = true;
+		    		}
+	    		} catch (NumberFormatException e) {
+	    			System.out.println("Try again.");
+	    		}
+    		}
     	}
 	    
 	    Voice[] voices = new Voice[numberOfVoices];
 	    
-	    int numberOfRhythms = random.nextInt(MAX_VOICES) + 1;
+	    int numberOfRhythms = numberOfSections;
 	    List<Pattern> rhythms = new ArrayList<>(numberOfRhythms);
 	    for(int i = 0; i < numberOfRhythms; i++) {
 	    	Pattern rhythm = new Pattern(random);
@@ -80,23 +94,21 @@ public class QuantifyMe {
 	    	rhythms.add(rhythm);
 	    }
 	    
-	    Double[] densities = new Double[numberOfVoices];
-	    for(int i = 0; i < numberOfVoices; i++) {
-	    	int voiceIndex = random.nextInt(numberOfVoices);
-	    	while(densities[voiceIndex] != null) {
-	    		voiceIndex = (voiceIndex + 1) % numberOfVoices;
-	    	}
-	    	densities[voiceIndex] = (Double) (i / ((double) numberOfVoices));
-	    	//densities[voiceIndex] = densities[voiceIndex] + ((1 - densities[voiceIndex]) / 2); // skew up
-	    }
-	    
 	    System.out.println("Generating patterns...");
 	    
+	    Double[][] densities = new Double[numberOfSections][numberOfVoices];
+	    for(int sectionIndex = 0; sectionIndex < numberOfSections; sectionIndex++) {
+		    for(int i = 0; i < numberOfVoices; i++) {
+		    	int voiceIndex = random.nextInt(numberOfVoices);
+		    	while(densities[sectionIndex][voiceIndex] != null) {
+		    		voiceIndex = (voiceIndex + 1) % numberOfVoices;
+		    	}
+		    	densities[sectionIndex][voiceIndex] = (Double) (i / ((double) numberOfVoices));
+		    	//densities[voiceIndex] = densities[voiceIndex] + ((1 - densities[voiceIndex]) / 2); // skew up
+		    }
+	    }
+	    
 	    for(int i = 0; i < numberOfVoices; i++) {
-	    	double density = densities[i];
-	    	
-	    	boolean isLead = density >= LEADER_THRESHOLD;
-	    	
 	    	int voiceSelection = random.nextInt(TOTAL_VOICE_OPTIONS);
 	    	
 	    	if(choose) {
@@ -114,29 +126,37 @@ public class QuantifyMe {
 	    		}
 	    	}
 	    	
-	    	System.out.println("Creating voice...");
-	    	
-	    	if(voiceSelection == KICK) {
-		    	voices[i] = new Kick(key, chords, rhythms.get(0), density, isLead, random);
-	    	} else if(voiceSelection == SNARE) {
-		    	voices[i] = new Snare(key, chords, rhythms.get(0), density, isLead, random);
-	    	} else if(voiceSelection == HIHAT) {
-		    	voices[i] = new Hihat(key, chords, rhythms.get(0), density, isLead, random);
-	    	} else if(voiceSelection == CHORD) {
-		    	voices[i] = new Chord(key, chords, rhythms.get(0), density, isLead, random);
-	    	} else if(voiceSelection == ARPEGGIO) {
-		    	voices[i] = new Arpeggio(key, chords, rhythms.get(0), density, isLead, random);
-	    	} else if(voiceSelection == BASS) {
-		    	voices[i] = new Arpeggio(key, chords, rhythms.get(0), density, isLead, random);
-	    	} else {
-	    		voices[i] = new Chord(key, chords, rhythms.get(0), density, isLead, random);
-	    	}
-	    	
-	    	voices[i].generatePattern();
-	    	voices[i].setPatternOverChords();
-	    	Pattern pattern = voices[i].getPatternInKey();
+	    	Pattern voicePattern = new Pattern();
+	    	for(int section = 0; section < numberOfSections; section++) {
+		    	double density = densities[section][i];
+		    	
+		    	boolean isLead = density >= LEADER_THRESHOLD;
+		    	System.out.println("Creating voice...");
+		    	
+		    	if(voiceSelection == KICK) {
+			    	voices[i] = new Kick(key, chords, rhythms.get(section), density, isLead, random);
+		    	} else if(voiceSelection == SNARE) {
+			    	voices[i] = new Snare(key, chords, rhythms.get(section), density, isLead, random);
+		    	} else if(voiceSelection == HIHAT) {
+			    	voices[i] = new Hihat(key, chords, rhythms.get(section), density, isLead, random);
+		    	} else if(voiceSelection == CHORD) {
+			    	voices[i] = new Chord(key, chords, rhythms.get(section), density, isLead, random);
+		    	} else if(voiceSelection == ARPEGGIO) {
+			    	voices[i] = new Arpeggio(key, chords, rhythms.get(section), density, isLead, random);
+		    	} else if(voiceSelection == BASS) {
+			    	voices[i] = new Arpeggio(key, chords, rhythms.get(section), density, isLead, random);
+		    	} else {
+		    		voices[i] = new Chord(key, chords, rhythms.get(section), density, isLead, random);
+		    	}
 
-		    writer.append(pattern.toString());
+		    	voices[i].generatePattern();
+		    	voices[i].setPatternOverChords();
+		    	Pattern pattern = voices[i].getPatternInKey();
+		    	//pattern.repeat(3);
+		    	voicePattern.add(pattern);
+	    	}
+	    	voicePattern.cutTimeToMeasure();
+		    writer.append(voicePattern.toString());
 		    writer.append("%");
 	    }
 	    

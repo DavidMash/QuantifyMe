@@ -1,7 +1,5 @@
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 public class Pattern {
@@ -17,51 +15,44 @@ public class Pattern {
 	
 	private List<String> pattern;
 	private Random random;
+	private int measures;
+	private boolean alreadyCut;
 	
 	public Pattern(String givenString, Random random) {
 		this.pattern = new LinkedList<String>();
 		this.add(givenString.split(" "));
 		this.random = random;
+		this.measures = 1;
+		this.alreadyCut = false;
 	}
 
 	public Pattern(Random random) {
 		this("", random);
 	}
 	
+	public Pattern() { // we need different kinds of patterns
+		this.pattern = new LinkedList<String>();
+		this.measures = 0;
+		this.alreadyCut = false;
+	}
+	
 	public Pattern(Pattern givenPattern) {
 		this(givenPattern.toString(), givenPattern.random);
+		this.measures = givenPattern.getMeasures();
 	}
 	
 	public Pattern(Pattern givenPattern, int repeats) {
-		this(givenPattern.toString(), givenPattern.random);
+		this(givenPattern);
 		this.repeat(repeats);
 	}
 	
 	public void repeat(int repeats) {
-		this.repeat(repeats, this.size());
-	}
-	
-	public void repeat(int repeats, int end) {
-		this.repeat(repeats, 0, end);
-	}
-	
-	public void repeat(int repeats, int start, int end) {
-		if(start < 0 || end > this.size()) throw new IndexOutOfBoundsException();
-		int copyPoint = end;
-		Pattern subpattern = this.getSubpattern(start, end);
-		for(int r = 0; r < repeats; r++) {
-			for(int i = start; i < end; i++) {
-				this.pattern.add(copyPoint++, subpattern.get(i));
-			}
-		}
-	}
-	
-	public Pattern getSubpattern(int start, int end) {
-		Pattern subpattern = new Pattern(this.random);
-		for(int i = start; i < end; i++) {
-			subpattern.add(this.get(i));
-		}
-		return subpattern;
+		if(repeats < 1) throw new IndexOutOfBoundsException();
+		this.add(0, "[");
+		this.add("]");
+		this.add("!" + (repeats + 1));
+		this.measures *= repeats + 1;
+		System.out.println("Repeat: measures = "+measures);
 	}
 
 	public void reset() {
@@ -78,7 +69,7 @@ public class Pattern {
 		}
 	}
 	
-	public void add(String[] strings) {
+	private void add(String[] strings) {
 		for (String string : strings) {
 			if(!string.isEmpty()) {
 				this.add(string);
@@ -86,25 +77,42 @@ public class Pattern {
 		}
 	}
 	
-	public void add(String newVal, int percentChance) {
-		int roll = this.random.nextInt(101); //0 to 100
-		if (roll >= percentChance) {
-			this.add(newVal);
+	public void add(int index, String newVal) {
+		if (newVal.isEmpty()) return;
+		if(index < 0 || index >= pattern.size()) throw new IndexOutOfBoundsException();
+		String[] splitList = newVal.split(" ");
+		if (splitList.length > 1) {
+			this.add(index, splitList);
 		} else {
-			this.addRest();
+			this.pattern.add(index, newVal);
+		}
+	}
+	
+	private void add(int index, String[] strings) {
+		for (int i = 0; i < strings.length; i++) {
+			String string = strings[i];
+			if(!string.isEmpty()) {
+				this.add(index + i, string);
+			}
+		}
+	}
+	
+	public void add(Pattern other, boolean wrap) {
+		this.measures += other.measures;
+		System.out.println("Add: measures = "+measures);
+		if(wrap) {
+			this.add(other.wrapped().getPatternArray());
+		} else {
+			this.add(other.getPatternArray());
 		}
 	}
 	
 	public void add(Pattern other) {
-		this.add(other.getPatternArray());
-	}
-	
-	public void add(int integer, int percentChance) {
-		this.add(""+integer, percentChance);
+		add(other, true);
 	}
 	
 	public void add(int integer) {
-		this.add(""+integer);
+		this.add("" + integer);
 	}
 	
 	public void addRest() {
@@ -119,16 +127,19 @@ public class Pattern {
 		this.add("]");
 	}
 	
-	public void addRandomNotes(int numberCount, int lowerRange, int upperRange) {
-		for (int i =  0; i < numberCount; i++) {
-			this.add(random.nextInt(upperRange - lowerRange) + lowerRange);
-		}
+	public Pattern wrapped() {
+		Pattern wrapped = new Pattern(this);
+		wrapped.add(0, "[");
+		wrapped.add("]");
+		return wrapped;
 	}
 	
-	public void addRandomBinary(int numberCount) {
-		for (int i =  0; i < numberCount; i++) {
-			this.add(random.nextInt(2));
-		}
+	private void setMeasures(int measures) {
+		this.measures = measures;
+	}
+	
+	public int getMeasures() {
+		return this.measures;
 	}
 	
 	public Pattern transpose(int amount) {
@@ -140,6 +151,7 @@ public class Pattern {
 				transposed.add(element);
 			}
 		}
+		transposed.setMeasures(this.measures);
 		return transposed;
 	}
 	
@@ -160,9 +172,21 @@ public class Pattern {
 		return array;
 	}
 	
-	public void cutTimeBy(int divisor) {
-		this.pattern.add(0, "[ ");
-		this.pattern.add(" ] / "+divisor);
+	public void cutTimeToMeasure() {
+		if(alreadyCut) {
+			for(String element : this.pattern) {
+				if(element.contains("/")) {
+					this.pattern.remove(element);
+					break;
+				}
+			}
+		}
+
+		this.pattern.add(0, "[");
+		this.pattern.add("]");
+		this.pattern.add("/" + this.measures);
+		
+		this.alreadyCut = true;
 	}
 	
 	public int size() {
@@ -188,6 +212,28 @@ public class Pattern {
 			}
 			this.closeBracket();
 		}
+	}
+	
+	public Pattern getPatternInKey(Pattern chords, Key key) {
+		Pattern result = new Pattern(this.random);
+		String[] patternArray = this.getPatternArray();
+		boolean ignoreNext = false;
+		for(String note : patternArray) {
+			if(ignoreNext) {
+				ignoreNext = false;
+				result.add(note);
+				continue;
+			}
+			try {
+				int noteAsNum = Integer.parseInt(note);
+				result.add(key.transposeToKey(noteAsNum));
+			}catch (NumberFormatException e) {
+				result.add(note);
+			}
+		}
+		result.setMeasures(this.measures);
+		
+		return result;
 	}
 	
 	public String toString() {

@@ -65,19 +65,18 @@ public class Chord extends PitchedVoice{
 	@Override
 	public void setPatternOverChords() {
 		Pattern thisPattern = new Pattern(this.pattern);
-		if(this.random.nextDouble() >= FILL_CHANCE) {
+		if(this.random.nextDouble() <= FILL_CHANCE) {
 			this.pattern = this.transpose(thisPattern, this.chords.get(0));
 			for(int i = 1; i < chords.size() - 1; i++) {
-				this.pattern.add(this.transpose(thisPattern, this.chords.get(i)));
+				this.pattern.add(this.transpose(thisPattern, this.chords.get(i)), false);
 			}
-			this.pattern.add(this.transpose(thisPattern, this.chords.get((chords.size() - 1))));
+			this.pattern.add(this.transpose(this.generateFill(), this.chords.get((chords.size() - 1))), false);
 		} else {
 			this.pattern = this.transpose(thisPattern, this.chords.get(0));
 			for(int i = 1; i < chords.size(); i++) {
-				this.pattern.add(this.transpose(thisPattern, this.chords.get(i)));
+				this.pattern.add(this.transpose(thisPattern, this.chords.get(i)), false);
 			}
 		}
-		this.pattern.cutTimeBy(chords.size());
 	}
 	
 	private Pattern transpose(Pattern pattern, String amount) {

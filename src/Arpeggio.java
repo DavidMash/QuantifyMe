@@ -81,19 +81,18 @@ public class Arpeggio extends PitchedVoice{
 	@Override
 	public void setPatternOverChords() {
 		Pattern thisPattern = new Pattern(this.pattern);
-		if(this.random.nextDouble() >= FILL_CHANCE) {
+		if(this.random.nextDouble() <= FILL_CHANCE) {
 			this.pattern = thisPattern.transpose(this.chords.get(0));
 			for(int i = 1; i < chords.size() - 1; i++) {
-				this.pattern.add(thisPattern.transpose(chords.get(i)));
+				this.pattern.add(thisPattern.transpose(chords.get(i)), false);
 			}
-			this.pattern.add(this.generateFill().transpose(chords.get(chords.size() - 1)));
+			this.pattern.add(this.generateFill().transpose(chords.get(chords.size() - 1)), false);
 		} else {
 			this.pattern = thisPattern.transpose(this.chords.get(0));
 			for(int i = 1; i < chords.size(); i++) {
-				this.pattern.add(thisPattern.transpose(chords.get(i)));
+				this.pattern.add(thisPattern.transpose(chords.get(i)), false);
 			}
 		}
-		this.pattern.cutTimeBy(chords.size());
 	}
 	
 	private int next() {

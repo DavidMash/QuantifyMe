@@ -37,7 +37,8 @@ public class Snare extends UnpitchedVoice{
 		}
 	}
 	
-	private void generateFill() {
+	private Pattern generateFill() {
+		Pattern fill = new Pattern(this.random);
 		double everyOtherChance = EVERY_OTHER_CHANCE / 2;
 		boolean everyOther = false;
 		int beatCount = 0;
@@ -46,16 +47,16 @@ public class Snare extends UnpitchedVoice{
 			try {
 				int rhythmValue = Integer.parseInt(rhythmElement);
 				if (everyOther && this.random.nextDouble() < everyOtherChance) {
-					this.pattern.add("0");
+					fill.add("0");
 				} else if (rhythmValue == 0) {
-					this.pattern.addRest();
+					fill.addRest();
 				} else if (random.nextDouble() < this.density + ((1 - this.density)/2)) {
-					this.pattern.add("0");
+					fill.add("0");
 				} else {
-					this.pattern.addRest();
+					fill.addRest();
 				}
 			} catch (NumberFormatException e) {
-				this.pattern.add(rhythmElement);
+				fill.add(rhythmElement);
 			}
 			everyOther = false;
 			if(rhythmElement.equals("[")) {
@@ -66,17 +67,17 @@ public class Snare extends UnpitchedVoice{
 				}
 			}
 		}
+		return fill;
 	}
 
 	@Override
 	public void setPatternOverChords() {
-		if(this.random.nextDouble() >= FILL_CHANCE) {
+		if(this.random.nextDouble() <= FILL_CHANCE) {
 			this.pattern.repeat(2);
-			this.generateFill();
+			this.pattern.add(generateFill());
 		} else {
 			this.pattern.repeat(3);
 		}
-		this.pattern.cutTimeBy(chords.size());
 	}
 	
 
