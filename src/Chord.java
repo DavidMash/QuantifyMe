@@ -80,7 +80,7 @@ public class Chord extends PitchedVoice{
 	}
 	
 	private Pattern transpose(Pattern pattern, String amount) {
-		return pattern.transpose(Integer.parseInt(amount) - 7); //down an octave
+		return pattern.transpose(Integer.parseInt(amount) - 14); //down an octave
 	}
 
 	@Override

@@ -51,8 +51,6 @@ public class QuantifyMe {
 	    Key key = new Key(random);
 	    key.setMode(Key.MODE.MAJOR);
 	    
-	    Pattern chords = generateChords();
-	    
 	    int numberOfVoices = random.nextInt(MAX_VOICES);
 	    int numberOfSections = random.nextInt(MAX_VOICES);
 	    
@@ -82,6 +80,8 @@ public class QuantifyMe {
 	    		}
     		}
     	}
+	    
+	    Pattern[] chords = generateChords(numberOfSections);
 	    
 	    Voice[] voices = new Voice[numberOfVoices];
 	    
@@ -134,19 +134,19 @@ public class QuantifyMe {
 		    	System.out.println("Creating voice...");
 		    	
 		    	if(voiceSelection == KICK) {
-			    	voices[i] = new Kick(key, chords, rhythms.get(section), density, isLead, random);
+			    	voices[i] = new Kick(key, chords[section], rhythms.get(section), density, isLead, random);
 		    	} else if(voiceSelection == SNARE) {
-			    	voices[i] = new Snare(key, chords, rhythms.get(section), density, isLead, random);
+			    	voices[i] = new Snare(key, chords[section], rhythms.get(section), density, isLead, random);
 		    	} else if(voiceSelection == HIHAT) {
-			    	voices[i] = new Hihat(key, chords, rhythms.get(section), density, isLead, random);
+			    	voices[i] = new Hihat(key, chords[section], rhythms.get(section), density, isLead, random);
 		    	} else if(voiceSelection == CHORD) {
-			    	voices[i] = new Chord(key, chords, rhythms.get(section), density, isLead, random);
+			    	voices[i] = new Chord(key, chords[section], rhythms.get(section), density, isLead, random);
 		    	} else if(voiceSelection == ARPEGGIO) {
-			    	voices[i] = new Arpeggio(key, chords, rhythms.get(section), density, isLead, random);
+			    	voices[i] = new Arpeggio(key, chords[section], rhythms.get(section), density, isLead, random);
 		    	} else if(voiceSelection == BASS) {
-			    	voices[i] = new Arpeggio(key, chords, rhythms.get(section), density, isLead, random);
+			    	voices[i] = new Arpeggio(key, chords[section], rhythms.get(section), density, isLead, random);
 		    	} else {
-		    		voices[i] = new Chord(key, chords, rhythms.get(section), density, isLead, random);
+		    		voices[i] = new Chord(key, chords[section], rhythms.get(section), density, isLead, random);
 		    	}
 
 		    	voices[i].generatePattern();
@@ -176,16 +176,21 @@ public class QuantifyMe {
 	    System.out.println("Done!");
 	}
 	
-	private static Pattern generateChords(){
+	private static Pattern[] generateChords(int progNumber){
 		String[] roots = {"0"};
 		String[] predominants = {"1", "2", "3", "5"};
 		String[] dominants = {"4", "6"};
 		
-		Pattern prog = new Pattern(random);
-		prog.add(roots[random.nextInt(roots.length)]);
-		prog.add(predominants[random.nextInt(predominants.length)]);
-		prog.add(predominants[random.nextInt(predominants.length)]);
-		prog.add(dominants[random.nextInt(dominants.length)]);		
-		return prog;
+		Pattern[] chords = new Pattern[progNumber];
+		
+		for(int i = 0; i < progNumber; i++) {
+			Pattern prog = new Pattern(random);
+			prog.add(roots[random.nextInt(roots.length)]);
+			prog.add(predominants[random.nextInt(predominants.length)]);
+			prog.add(predominants[random.nextInt(predominants.length)]);
+			prog.add(dominants[random.nextInt(dominants.length)]);	
+			chords[i] = prog;
+		}
+		return chords;
 	}
 }
