@@ -3,41 +3,31 @@ import java.util.List;
 import java.util.Random;
 
 public class Pattern {
-	private static final int BEAT_DICE_SIDES = 20;
-	private static final int ODD_BEAT_THRESHOLD = 19;
-	private static final int DOWNBEAT_DICE_SIDES = 4;
-	private static final int DOWNBEAT_THRESHOLD = 1;
-	private static final int OFFBEAT_DICE_SIDES = 4;
-	private static final int OFFBEAT_THRESHOLD = 3;
-	private static final int SUBDIVISION_DICE_SIDES = 10;
-	private static final int TRIPLET_THRESHOLD = 9;
-	private static final int COMMON_TIME = 4;
 	
-	private List<String> pattern;
-	private Random random;
-	private int measures;
+	protected List<String> pattern;
+	protected int measures;
 	private boolean alreadyCut;
 	
-	public Pattern(String givenString, Random random) {
+	public Pattern(String givenString) {
 		this.pattern = new LinkedList<String>();
 		this.add(givenString.split(" "));
-		this.random = random;
 		this.measures = 1;
 		this.alreadyCut = false;
 	}
-
-	public Pattern(Random random) {
-		this("", random);
+	
+	public Pattern(boolean noMeasures) { //TODO: Make a different way to do no measures
+		this();
+		if (noMeasures) {
+			this.measures = 0;
+		}
 	}
 	
-	public Pattern() { // we need different kinds of patterns
-		this.pattern = new LinkedList<String>();
-		this.measures = 0;
-		this.alreadyCut = false;
+	public Pattern() {
+		this("");
 	}
 	
 	public Pattern(Pattern givenPattern) {
-		this(givenPattern.toString(), givenPattern.random);
+		this(givenPattern.toString());
 		this.measures = givenPattern.getMeasures();
 	}
 	
@@ -79,7 +69,7 @@ public class Pattern {
 	
 	public void add(int index, String newVal) {
 		if (newVal.isEmpty()) return;
-		if(index < 0 || index >= pattern.size()) throw new IndexOutOfBoundsException();
+		if(index < 0 || index > pattern.size()) throw new IndexOutOfBoundsException();
 		String[] splitList = newVal.split(" ");
 		if (splitList.length > 1) {
 			this.add(index, splitList);
@@ -127,6 +117,11 @@ public class Pattern {
 		this.add("]");
 	}
 	
+	public void remove(int i) {
+		if(i < 0 || i >= pattern.size()) throw new IndexOutOfBoundsException();
+		this.pattern.remove(i);
+	}
+	
 	public Pattern wrapped() {
 		Pattern wrapped = new Pattern(this);
 		wrapped.add(0, "[");
@@ -143,7 +138,7 @@ public class Pattern {
 	}
 	
 	public Pattern transpose(int amount) {
-		Pattern transposed = new Pattern(this.random);
+		Pattern transposed = new Pattern();
 		for (String element : this.pattern) {
 			try {
 				transposed.add((Integer.parseInt(element) + amount));
@@ -193,29 +188,8 @@ public class Pattern {
 		return pattern.size();
 	}
 	
-	public void generateRhythm() {
-		this.reset();
-		boolean triplet = (this.random.nextInt(SUBDIVISION_DICE_SIDES) >= TRIPLET_THRESHOLD);
-		int beats = (this.random.nextInt(BEAT_DICE_SIDES) >= ODD_BEAT_THRESHOLD)? COMMON_TIME + (this.random.nextInt(6) - 3): COMMON_TIME;
-		for(int i = 0; i < beats; i++) {
-			this.openBracket(); //start of beat
-			int dice = DOWNBEAT_DICE_SIDES;
-			int threshold = DOWNBEAT_THRESHOLD;
-			int subdivisions = ((triplet)? 3 : 2) * (random.nextInt(2) + 1);
-			for(int j = 0; j < subdivisions; j++) {
-				if (j > 0) {
-					dice = OFFBEAT_DICE_SIDES;
-					threshold = OFFBEAT_THRESHOLD;
-				}
-				if(random.nextInt(dice) >= threshold) this.add("1");
-				else this.add("0");
-			}
-			this.closeBracket();
-		}
-	}
-	
-	public Pattern getPatternInKey(Pattern chords, Key key) {
-		Pattern result = new Pattern(this.random);
+	public Pattern getPatternInKey(Key key) {
+		Pattern result = new Pattern();
 		String[] patternArray = this.getPatternArray();
 		boolean ignoreNext = false;
 		for(String note : patternArray) {

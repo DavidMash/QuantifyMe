@@ -1,109 +1,74 @@
 import java.util.Random;
 
 public class Arpeggio extends PitchedVoice{
-	static final double EVERY_CHANCE = 0.50;
-	static final double FILL_CHANCE = 0.7;
+	private static double[] chances;
 	
-	private static int[][] arps = {{0, 2, 4},
-								{0, 2, 4, 6},
-								{0, 2, 4, 6, 7},
-								{0, 2, 4, 7},
-								{0, 2, 4, 2},
-								{0, 2, 4, 6, 4, 2},
-								{0, 2, 4, 6, 7, 6, 4, 2},
-								{0, 2, 4, 7, 4, 2},
-								{0, 2, 4, 2, 4, 6, 4, 6}
+	private static final String[][] arps = {
+			{"0", "2"},
+			{"0", "5"},
+			{"0", "2", "4"},
+			{"0", "2", "4", "6"},
+			{"0", "2", "4", "7"},
 	};
+	private static final int UP = 0;
+	private static final int UP_DOWN = 1;
+	private static final int DOWN = 2;
+	private static final int DOWN_UP = 3;
+	private static final int OPTIONS = 4;
 	
-	private int[] arp;
-	private int arpStep;
-
-	public Arpeggio(Key key, Pattern chords, Pattern rhythm, Double density, boolean isLead, Random random) {
-		super(key, chords, rhythm, density, isLead, random);
-		this.arp = arps[this.random.nextInt(arps.length)];
-		arpStep = 0;
+	private int arpSelection;
+	private int arpMovement;
+	private int curr = -1;
+	private boolean direction = false;
+	private Random random;
+	
+	public Arpeggio(Random random) {
+		super();
+		this.random = random;
+		this.voiceName = "Arpeggio";
+		this.arpSelection = this.random.nextInt(arps.length);
+		this.arpMovement = this.random.nextInt(OPTIONS);
+		
 	}
 
 	@Override
-	public void generatePattern() {
-		boolean downbeat = false;
-		for (int i = 0; i < rhythm.size(); i++) {
-			String rhythmElement = rhythm.get(i);
-			try {
-				int rhythmValue = Integer.parseInt(rhythmElement);
-				if (downbeat && this.random.nextDouble() < EVERY_CHANCE) {
-					this.pattern.add(this.next());
-				} else if (rhythmValue == 0) {
-					this.pattern.addRest();
-				} else if (random.nextDouble() < this.density + ((1 - this.density)/2)) {
-					this.pattern.add(this.next());
-				} else {
-					this.pattern.addRest();
-				}
-			} catch (NumberFormatException e) {
-				this.pattern.add(rhythmElement);
-			}
-			downbeat = false;
-			if(rhythmElement.equals("[")) {
-				downbeat = true;
-			}
+	protected double[] getChances() {
+		if(chances == null) {
+			chances = new double[8];
+			chances[VoicedRhythm.FILL] = 0.3;
+			chances[VoicedRhythm.DOWNBEAT] = 0.1;
+			chances[VoicedRhythm.EVERY_BEAT] = 0.2;
+			chances[VoicedRhythm.EVERY_OTHER_BEAT] = 0.2;
+			chances[VoicedRhythm.EVERY_SECOND_BEAT] = 0.3;
+			chances[VoicedRhythm.EVERY_NOTE] = 0.85;
+			chances[VoicedRhythm.EVERY_OTHER_NOTE] = 0.2;
+			chances[VoicedRhythm.OFFBEAT] = 0.6;
 		}
+		return chances;
 	}
 	
-	private Pattern generateFill() {
-		Pattern fill = new Pattern(this.random);
-		double downbeatChance = EVERY_CHANCE / 2;
-		boolean downbeat = false;
-		for (int i = 0; i < rhythm.size(); i++) {
-			String rhythmElement = rhythm.get(i);
-			try {
-				int rhythmValue = Integer.parseInt(rhythmElement);
-				if (downbeat && this.random.nextDouble() < downbeatChance) {
-					fill.add(this.next());
-				} else if (rhythmValue == 0) {
-					fill.addRest();
-				} else if (random.nextDouble() < this.density + ((1 - this.density)/2)) {
-					fill.add(this.next());
-				} else {
-					fill.addRest();
-				}
-			} catch (NumberFormatException e) {
-				fill.add(rhythmElement);
-			}
-			downbeat = false;
-			if(rhythmElement.equals("[")) {
-				downbeat = true;
-			}
-		}
-		return fill;
-	}
-
 	@Override
-	public void setPatternOverChords() {
-		Pattern thisPattern = new Pattern(this.pattern);
-		if(this.random.nextDouble() <= FILL_CHANCE) {
-			this.pattern = thisPattern.transpose(this.chords.get(0));
-			for(int i = 1; i < chords.size() - 1; i++) {
-				this.pattern.add(thisPattern.transpose(chords.get(i)), false);
+	public String next() {
+		if (curr < 0) {
+			if (arpMovement < 2) {
+				this.curr = 0;
+				this.direction = true;
+			} else {
+				this.curr = arps[arpSelection].length - 1;
+				this.direction = false;
 			}
-			this.pattern.add(this.generateFill().transpose(chords.get(chords.size() - 1)), false);
 		} else {
-			this.pattern = thisPattern.transpose(this.chords.get(0));
-			for(int i = 1; i < chords.size(); i++) {
-				this.pattern.add(thisPattern.transpose(chords.get(i)), false);
+			if (arpMovement == UP) {
+				curr = (curr + 1) % arps[arpSelection].length;
+			} else if (arpMovement == DOWN) {
+				curr = (curr == 0)? arps[arpSelection].length - 1: curr - 1;
+			} else if (arpMovement == UP_DOWN || arpMovement == DOWN_UP) {
+				curr = (direction)? curr + 1: curr - 1;
+			}
+			if (curr >= arps[arpSelection].length - 1 || curr <= 0) {
+				direction = !direction;
 			}
 		}
+		return arps[arpSelection][curr];
 	}
-	
-	private int next() {
-		int currStep = arpStep;
-		arpStep = (arpStep + 1) % arp.length;
-		return arp[currStep];
-	}
-
-	@Override
-	public String toString() {
-		return "Arpeggio";
-	}
-
 }

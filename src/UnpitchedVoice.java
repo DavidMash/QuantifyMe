@@ -1,13 +1,8 @@
-import java.util.Random;
+import java.util.List;
 
 abstract class UnpitchedVoice extends Voice{
-	
-	public UnpitchedVoice(Key key, Pattern chords, Pattern rhythm, Double density, boolean isLead, Random random) {
-		super(key, chords, rhythm, density, isLead, random);
-	}
-
 	@Override
-	public Pattern getPatternInKey() {
-		return pattern;
+	protected Pattern setOverChords(List<Integer> chords, VoicedRhythm voicedRhythm) {
+		return voicedRhythm.getOverChordsNoTransposing(chords);
 	}
 }

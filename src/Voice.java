@@ -1,38 +1,19 @@
-import java.util.Random;
+import java.util.List;
 
 public abstract class Voice {
+	protected String voiceName = "Unlabeled Voice";
 	
-	protected Key key;
-	protected Pattern chords;
-	protected Pattern rhythm;
-	protected double density;
-	protected boolean isLead;
-	protected Pattern pattern;
-	protected Random random;
-	
-	public Voice(Key key, Pattern chords, Pattern rhythm, Double density, boolean isLead, Random random) {
-		this.key = key;
-		this.chords = chords;
-		this.rhythm = rhythm;
-		this.density = density;
-		this.isLead = isLead;
-		this.random = new Random();
-		this.pattern = new Pattern(this.random);
+	public Pattern generateVoicedRhythm(List<Integer> chords, Rhythm rhythm, double voiceDensity) {
+		return this.setOverChords(chords, new VoicedRhythm(this, rhythm, voiceDensity, true)); //TODO: randomize the downbeat boolean
 	}
 	
-	public void reset() {
-		this.pattern = new Pattern(this.random);
-	}
-	
-	abstract public void generatePattern();
+	protected abstract Pattern setOverChords(List<Integer> chords, VoicedRhythm voicedRhythm);
 
-	abstract public void setPatternOverChords();
+	protected abstract double[] getChances();
+
+	abstract public String next();
 	
-	abstract public Pattern getPatternInKey();
-	
-	public double getDensity() {
-		return this.density;
+	public String toString() {
+		return this.voiceName;
 	}
-	
-	abstract public String toString();
 }
