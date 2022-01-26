@@ -5,9 +5,11 @@ import java.util.Random;
 public class Key {
 	public enum MODE {
 	    MAJOR,
-	    NATURAL_MINOR,
-	    HARMONIC_MINOR
+	    MINOR
 	}
+	
+	public final MODE[] majorChords = {MODE.MAJOR, MODE.MINOR, MODE.MINOR, MODE.MAJOR, MODE.MAJOR, MODE.MINOR, MODE.MINOR}; //should seven really be minor?
+	public final MODE[] minorChords = {MODE.MINOR, MODE.MINOR, MODE.MAJOR, MODE.MINOR, MODE.MAJOR, MODE.MAJOR, MODE.MAJOR}; //should two really be minor?
 	
 	public static final Map<Integer, Integer> major = new HashMap<>();
 	public static final Map<Integer, Integer> naturalMinor = new HashMap<>();
@@ -103,24 +105,32 @@ public class Key {
 		int octave = note / 7;
 		if(this.mode == MODE.MAJOR) {
 			note = major(note);
-		}else if (this.mode == MODE.NATURAL_MINOR) {
+		}else if (this.mode == MODE.MINOR) {
 			note = naturalMinor(note);
-		}else if (this.mode == MODE.HARMONIC_MINOR) {
-			note = harmonicMinor(note);
 		}
 		note += (octave * 12);
 		note += tonicValue;
 		return note;
 	}
 	
+	public Key getModulationKey() {
+		int randomNote = 4;//this.random.nextInt(5) + 1; // 1 - 5
+		int newTonic = this.transposeToKey(randomNote) % 12;
+		MODE newMode;
+		if (this.mode == MODE.MAJOR) {
+			newMode = this.majorChords[randomNote];
+		} else {
+			newMode = this.minorChords[randomNote];
+		}
+		return new Key(newTonic, newMode, this.random);
+	}
+	
 	public String toString() {
 		String modeString = "";
 		if(this.mode == MODE.MAJOR) {
 			modeString = "Major";
-		}else if (this.mode == MODE.NATURAL_MINOR) {
+		}else if (this.mode == MODE.MINOR) {
 			modeString = "Natural Minor";
-		}else if (this.mode == MODE.HARMONIC_MINOR) {
-			modeString = "Harmonic Minor";
 		}
 		return tonics[this.tonicValue] + " " + modeString;
 	}

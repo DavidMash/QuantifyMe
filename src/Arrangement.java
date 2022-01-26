@@ -34,8 +34,9 @@ public class Arrangement{
 	
 	private void setKey() {
 		System.out.println("Setting Key Signature");
-	    this.key = new Key(random);
-	    this.key.setMode(Key.MODE.MAJOR); //only major for now
+		this.key = new Key(0, Key.MODE.MAJOR, random);
+	    //this.key = new Key(random);
+	    //this.key.setMode(Key.MODE.MAJOR); //only major for now
 	}
 	   
 	private void setVoices() throws IOException {
@@ -78,13 +79,13 @@ public class Arrangement{
 	    	} else if(voiceSelection == HIHAT) {
 	    		this.voices.add(new Hihat());
 	    	} else if(voiceSelection == CHORD) {
-	    		this.voices.add(new Chord());
+	    		this.voices.add(new Chordal());
 	    	} else if(voiceSelection == ARPEGGIO) {
 	    		this.voices.add(new Arpeggio(this.random));
 	    	} else if(voiceSelection == BASS) {
 	    		this.voices.add(new Bass());
 	    	} else {
-	    		this.voices.add(new Chord());
+	    		this.voices.add(new Chordal());
 	    	}
 	    }
 	}
@@ -106,9 +107,10 @@ public class Arrangement{
 	    		}
     		}
     	}
-	    
+	    Key currKey = this.key;
 	    for(int i = 0; i < numberOfSections; i++) {
-	    	sections.add(new Section(this.voices, 1, this.random)); //TODO: make the section density change
+	    	sections.add(new Section(this.voices, currKey, 1, 1, this.random)); //TODO: make the section density and modulation chance change
+	    	currKey = sections.get(i).nextKey();
 	    }
 	}
 	
@@ -117,7 +119,7 @@ public class Arrangement{
 		for (int i = 0; i < voices.size(); i++) {
 			Pattern voicePattern = new Pattern(true);
 			for (Section section : this.sections) {
-				voicePattern.add(section.get(i).getPatternInKey(this.key));
+				voicePattern.add(section.get(i));
 			}
 			voicePattern.cutTimeToMeasure();
 			string.append(voicePattern.toString());

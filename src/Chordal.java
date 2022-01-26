@@ -1,23 +1,23 @@
-public class Bass extends PitchedVoice{
+public class Chordal extends PitchedVoice{
 	private static double[] chances;
 	
-	public Bass() {
+	public Chordal() {
 		super();
-		this.voiceName = "Bass";
+		this.voiceName = "Chord";
 	}
-	
+
 	@Override
 	protected double[] getChances() {
 		if(chances == null) {
 			chances = new double[8];
-			chances[VoicedRhythm.FILL] = 0.4;
-			chances[VoicedRhythm.DOWNBEAT] = 0.8;
-			chances[VoicedRhythm.EVERY_BEAT] = 0.4;
+			chances[VoicedRhythm.FILL] = 0.8;
+			chances[VoicedRhythm.DOWNBEAT] = 0.5;
+			chances[VoicedRhythm.EVERY_BEAT] = 0.3;
 			chances[VoicedRhythm.EVERY_OTHER_BEAT] = 0.5;
-			chances[VoicedRhythm.EVERY_SECOND_BEAT] = 0;
+			chances[VoicedRhythm.EVERY_SECOND_BEAT] = 0.1;
 			chances[VoicedRhythm.EVERY_NOTE] = 0;
 			chances[VoicedRhythm.EVERY_OTHER_NOTE] = 0;
-			chances[VoicedRhythm.OFFBEAT] = 0.6;
+			chances[VoicedRhythm.OFFBEAT] = 0.4;
 		}
 		return chances;
 	}
@@ -25,6 +25,6 @@ public class Bass extends PitchedVoice{
 
 	@Override
 	public String next() {
-		return "-14";
+		return "[ 0 , 2 , 4 ]";
 	}
 }

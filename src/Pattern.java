@@ -189,6 +189,8 @@ public class Pattern {
 	}
 	
 	public Pattern getPatternInKey(Key key) {
+		System.out.println("Getting Pattern:"+this);
+		System.out.println("Getting Key: "+key);
 		Pattern result = new Pattern();
 		String[] patternArray = this.getPatternArray();
 		boolean ignoreNext = false;

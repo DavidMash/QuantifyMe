@@ -19,7 +19,7 @@ public class VoicedRhythm extends Rhythm{
 	
 	public VoicedRhythm(Voice voice, Rhythm other, double density, boolean resetChanceOnBeat) {
 		super(other.getQuantizedUp());
-		this.base = other;
+		this.base = other.getQuantizedUp();
 		this.voice = voice;
 		this.resetChanceOnBeat = resetChanceOnBeat;
 		if (this.voice.getChances().length < 8) { 
@@ -29,19 +29,30 @@ public class VoicedRhythm extends Rhythm{
 		this.generateVoicedRhythm();
 	}
 	
-	public Pattern getOverChords(List<Integer> chords) {
-		Pattern resultPattern = (new Pattern(this)).transpose(chords.get(0));;
+	public Pattern getOverChords(List<Integer> chords, Key key, Key nextKey, int switchPoint) {
+		System.out.println(key+" to "+nextKey+" on chord number "+switchPoint);
+		Key currKey = key;
+		int chordCount = 0;
+		currKey = (chordCount >= switchPoint)? nextKey: key;
+		Pattern resultPattern = (new Pattern(this)).transpose(chords.get(0)).getPatternInKey(currKey);
 		Pattern thisPattern = new Pattern(this);
 		if(this.random.nextDouble() <= chances[FILL]) {
 			for(int i = 1; i < chords.size() - 1; i++) {
-				resultPattern.add(thisPattern.transpose(chords.get(i)), false);
+				chordCount++;
+				currKey = (chordCount >= switchPoint)? nextKey: key;
+				resultPattern.add((thisPattern.transpose(chords.get(i))).getPatternInKey(currKey), false);
 			}
-			resultPattern.add(this.generateVoicedFill().transpose(chords.get((chords.size() - 1))), false);
+			chordCount++;
+			currKey = (chordCount >= switchPoint)? nextKey: key;
+			resultPattern.add(this.generateVoicedFill().transpose((chords.get((chords.size() - 1)))).getPatternInKey(currKey), false);
 		} else {
 			for(int i = 1; i < chords.size(); i++) {
-				resultPattern.add(thisPattern.transpose(chords.get(i)), false);
+				chordCount++;
+				currKey = (chordCount >= switchPoint)? nextKey: key;
+				resultPattern.add((thisPattern.transpose(chords.get(i))).getPatternInKey(currKey), false);
 			}
 		}
+		System.out.println("Pattern Over Chords: "+resultPattern);
 		return resultPattern;
 	}
 	
@@ -108,7 +119,7 @@ public class VoicedRhythm extends Rhythm{
 					this.counter[EVERY_OTHER_NOTE]++;
 				}
 				this.active[EVERY_NOTE] = true;
-				if(this.counter[OFFBEAT] >= (this.highestSubdivision / ((this.triplet)? 3: 2))) {
+				if(this.counter[OFFBEAT] >= (this.highestSubdivision / ((this.triplet)? 3: 2)) - 1) {
 					this.active[OFFBEAT] = true;
 					this.counter[OFFBEAT] = 0;
 				} else {

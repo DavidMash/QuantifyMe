@@ -14,7 +14,7 @@ public class Snare extends UnpitchedVoice{
 			chances[VoicedRhythm.DOWNBEAT] = 0;
 			chances[VoicedRhythm.EVERY_BEAT] = 0;
 			chances[VoicedRhythm.EVERY_OTHER_BEAT] = 0;
-			chances[VoicedRhythm.EVERY_SECOND_BEAT] = 1;
+			chances[VoicedRhythm.EVERY_SECOND_BEAT] = 0.8;
 			chances[VoicedRhythm.EVERY_NOTE] = 0;
 			chances[VoicedRhythm.EVERY_OTHER_NOTE] = 0;
 			chances[VoicedRhythm.OFFBEAT] = 0;
