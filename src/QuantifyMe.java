@@ -9,13 +9,19 @@ import java.util.List;
 import java.util.Random;
 
 public class QuantifyMe {
-	static final Random random = new Random(); 
+	static Random random; 
 	
 	public static BufferedReader keyboard;
 	public static boolean debug = false;
 	public static boolean choose = false;
 	
 	public static void main(String[] args) throws IOException {
+		random = new Random();
+	    //Store a random seed
+	    long seed = random.nextLong();
+	    //Set the Random object seed
+	    random.setSeed(seed);
+		
 		if(args.length > 0 && args[0].equals("debug")) { 
 			debug = true;
 			System.out.println("Starting in debug mode...");
@@ -44,7 +50,7 @@ public class QuantifyMe {
 	    	writer.append("\n" + (voiceNum++) + ") " + voice);
 	    }
 	    writer.append("\nin the key of "+arrangement.getKey()+".");
-	    
+	    writer.append("\nSeed: " + seed);
 	    System.out.println("Saving to File: "+file.getAbsolutePath());
 	    writer.close();
 	    System.out.println("Done!");

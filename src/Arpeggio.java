@@ -1,3 +1,4 @@
+import java.util.List;
 import java.util.Random;
 
 public class Arpeggio extends PitchedVoice{
@@ -20,11 +21,9 @@ public class Arpeggio extends PitchedVoice{
 	private int arpMovement;
 	private int curr = -1;
 	private boolean direction = false;
-	private Random random;
 	
 	public Arpeggio(Random random) {
-		super();
-		this.random = random;
+		super(random);
 		this.voiceName = "Arpeggio";
 		this.arpSelection = this.random.nextInt(arps.length);
 		this.arpMovement = this.random.nextInt(OPTIONS);
@@ -34,7 +33,7 @@ public class Arpeggio extends PitchedVoice{
 	@Override
 	protected double[] getChances() {
 		if(chances == null) {
-			chances = new double[8];
+			chances = new double[11];
 			chances[VoicedRhythm.FILL] = 0.3;
 			chances[VoicedRhythm.DOWNBEAT] = 0.1;
 			chances[VoicedRhythm.EVERY_BEAT] = 0.2;
@@ -43,6 +42,9 @@ public class Arpeggio extends PitchedVoice{
 			chances[VoicedRhythm.EVERY_NOTE] = 0.85;
 			chances[VoicedRhythm.EVERY_OTHER_NOTE] = 0.2;
 			chances[VoicedRhythm.OFFBEAT] = 0.6;
+			chances[VoicedRhythm.PEDAL] = 0.4;
+			chances[VoicedRhythm.P_STOP_BEAT] = 0;
+			chances[VoicedRhythm.P_STOP_HALF] = 0;
 		}
 		return chances;
 	}
@@ -70,5 +72,10 @@ public class Arpeggio extends PitchedVoice{
 			}
 		}
 		return arps[arpSelection][curr];
+	}
+
+	@Override
+	protected Voice copy() {
+		return new Arpeggio(this.random);
 	}
 }

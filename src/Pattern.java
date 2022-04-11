@@ -42,7 +42,23 @@ public class Pattern {
 		this.add("]");
 		this.add("!" + (repeats + 1));
 		this.measures *= repeats + 1;
-		System.out.println("Repeat: measures = "+measures);
+		//System.out.println("*****************************((((((((((((((()))))))))))))))");
+		System.out.println("Repeat completed, measures = "+this.measures);
+	}
+
+	public void physicalRepeat(int repeats) {
+		if(repeats < 1) throw new IndexOutOfBoundsException();
+		Pattern copy = new Pattern(this);
+		for (int i = 0; i < repeats; i++) {
+			this.add(copy);
+		}
+	}
+	
+	public void elongate(int i, int multiple) {
+		if(multiple < 1) throw new IndexOutOfBoundsException();
+		this.add(i + 1, "_" + multiple);
+		this.add(i + 1, "]");
+		this.add(i, "[");
 	}
 
 	public void reset() {
@@ -89,12 +105,13 @@ public class Pattern {
 	
 	public void add(Pattern other, boolean wrap) {
 		this.measures += other.measures;
-		System.out.println("Add: measures = "+measures);
 		if(wrap) {
 			this.add(other.wrapped().getPatternArray());
 		} else {
 			this.add(other.getPatternArray());
 		}
+		//System.out.println("*****************************((((((((((((((()))))))))))))))");
+		//System.out.println("ADD completed, measures = "+this.measures);
 	}
 	
 	public void add(Pattern other) {
@@ -137,21 +154,24 @@ public class Pattern {
 		return this.measures;
 	}
 	
-	public Pattern transpose(int amount) {
+	public Pattern transpose(String string, Key key) {
 		Pattern transposed = new Pattern();
 		for (String element : this.pattern) {
 			try {
-				transposed.add((Integer.parseInt(element) + amount));
+				String flag = ".";
+				if (key.getMode() == Key.MODE.MINOR && string.equals("4") && element.equals("2")) {
+					flag = ">"; //raise the third of the five chord in minor
+				} else if (key.getMode() == Key.MODE.MAJOR && string.charAt(0) == 'm' && element.equals("2")) {
+					flag = "<"; //lower the third of an explicit minor chord
+					string = string.substring(1);
+				}
+				transposed.add(flag + (Integer.parseInt(element) + Integer.parseInt(string)));
 			} catch (NumberFormatException e){
 				transposed.add(element);
 			}
 		}
 		transposed.setMeasures(this.measures);
 		return transposed;
-	}
-	
-	public Pattern transpose(String amountString) {
-		return this.transpose(Integer.parseInt(amountString));
 	}
 	
 	public String get(int i) {
@@ -189,8 +209,8 @@ public class Pattern {
 	}
 	
 	public Pattern getPatternInKey(Key key) {
-		System.out.println("Getting Pattern:"+this);
-		System.out.println("Getting Key: "+key);
+		//System.out.println("Getting Pattern:"+this);
+		//System.out.println("Getting Key: "+key);
 		Pattern result = new Pattern();
 		String[] patternArray = this.getPatternArray();
 		boolean ignoreNext = false;
@@ -200,9 +220,13 @@ public class Pattern {
 				result.add(note);
 				continue;
 			}
+			if (note.charAt(0) == '_') {
+				result.add(note);
+				continue;
+			}
 			try {
-				int noteAsNum = Integer.parseInt(note);
-				result.add(key.transposeToKey(noteAsNum));
+				int noteAsNum = Integer.parseInt(note.substring(1));
+				result.add(key.transposeToKey(noteAsNum, note.charAt(0)));
 			}catch (NumberFormatException e) {
 				result.add(note);
 			}
